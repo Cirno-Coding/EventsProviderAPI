@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     events_provider_base_url: str = Field(
-        default="http://student-system-events-provider-web.student-system-events-provider.svc:8000",
+        default="",
         alias="EVENTS_PROVIDER_BASE_URL",
     )
     events_provider_api_key: str = Field(
