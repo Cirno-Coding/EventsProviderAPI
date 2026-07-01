@@ -1,7 +1,9 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from app.api.events import router as events_router
 from app.api.health import router as health_router
@@ -34,6 +36,16 @@ def create_app() -> FastAPI:
         debug=settings.debug,
         lifespan=lifespan,
     )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(
+        request: Request,
+        exc: RequestValidationError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": exc.errors()},
+        )
 
     app.include_router(health_router)
     app.include_router(events_router)
