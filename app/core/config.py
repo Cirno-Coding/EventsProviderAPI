@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,26 +9,19 @@ class Settings(BaseSettings):
     app_env: str = Field(default="local", alias="APP_ENV")
     debug: bool = Field(default=False, alias="DEBUG")
 
-    database_url: str = Field(
-        validation_alias=AliasChoices(
-            "DATABASE_URL",
-            "POSTGRES_CONNECTION_STRING",
-        ),
+    database_url_env: str | None = Field(default=None, alias="DATABASE_URL")
+    postgres_connection_string: str | None = Field(
+        default=None,
+        alias="POSTGRES_CONNECTION_STRING",
     )
 
     events_provider_base_url: str = Field(
         default="",
-        validation_alias=AliasChoices(
-            "EVENTS_PROVIDER_BASE_URL",
-            "EVENTS_PROVIDER_URL",
-        ),
+        alias="EVENTS_PROVIDER_BASE_URL",
     )
     events_provider_api_key: str = Field(
         default="",
-        validation_alias=AliasChoices(
-            "EVENTS_PROVIDER_API_KEY",
-            "API_KEY",
-        ),
+        alias="EVENTS_PROVIDER_API_KEY",
     )
 
     enable_background_sync: bool = Field(default=False, alias="ENABLE_BACKGROUND_SYNC")
@@ -41,7 +34,27 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @property
+    def database_url(self) -> str:
+        raw_url = self.database_url_env or self.postgres_connection_string
+
+        if raw_url is None:
+            raise RuntimeError(
+                "DATABASE_URL or POSTGRES_CONNECTION_STRING is required",
+            )
+
+        if raw_url.startswith("postgresql+asyncpg://"):
+            return raw_url
+
+        if raw_url.startswith("postgresql://"):
+            return raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        if raw_url.startswith("postgres://"):
+            return raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
+        return raw_url
+
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings
+    return Settings()
