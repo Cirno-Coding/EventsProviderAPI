@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,17 +10,25 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
 
     database_url: str = Field(
-        default="postgresql+asyncpg://postgres:postgres@localhost:5432/events_aggregator",
-        alias="DATABASE_URL",
+        validation_alias=AliasChoices(
+            "DATABASE_URL",
+            "POSTGRES_CONNECTION_STRING",
+        ),
     )
 
     events_provider_base_url: str = Field(
         default="",
-        alias="EVENTS_PROVIDER_BASE_URL",
+        validation_alias=AliasChoices(
+            "EVENTS_PROVIDER_BASE_URL",
+            "EVENTS_PROVIDER_URL",
+        ),
     )
     events_provider_api_key: str = Field(
         default="",
-        alias="EVENTS_PROVIDER_API_KEY",
+        validation_alias=AliasChoices(
+            "EVENTS_PROVIDER_API_KEY",
+            "API_KEY",
+        ),
     )
 
     enable_background_sync: bool = Field(default=False, alias="ENABLE_BACKGROUND_SYNC")
@@ -36,4 +44,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings
