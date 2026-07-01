@@ -9,12 +9,21 @@ class Settings(BaseSettings):
     app_env: str = Field(default="local", alias="APP_ENV")
     debug: bool = Field(default=False, alias="DEBUG")
 
-    database_url: str = Field(alias="DATABASE_URL")
+    database_url: str = Field(
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/events_aggregator",
+        alias="DATABASE_URL",
+    )
 
-    events_provider_base_url: str = Field(alias="EVENTS_PROVIDER_BASE_URL")
-    events_provider_api_key: str = Field(alias="EVENTS_PROVIDER_API_KEY")
+    events_provider_base_url: str = Field(
+        default="",
+        alias="EVENTS_PROVIDER_BASE_URL",
+    )
+    events_provider_api_key: str = Field(
+        default="",
+        alias="EVENTS_PROVIDER_API_KEY",
+    )
 
-    enable_background_sync: bool = Field(default=True, alias="ENABLE_BACKGROUND_SYNC")
+    enable_background_sync: bool = Field(default=False, alias="ENABLE_BACKGROUND_SYNC")
     sync_interval_seconds: int = Field(default=86400, alias="SYNC_INTERVAL_SECONDS")
     seats_cache_ttl_seconds: int = Field(default=30, alias="SEATS_CACHE_TTL_SECONDS")
 
