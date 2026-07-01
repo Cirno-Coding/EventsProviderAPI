@@ -20,7 +20,6 @@ class Settings(BaseSettings):
         alias="EVENTS_PROVIDER_BASE_URL",
     )
     events_provider_api_key: str = Field(
-        default="",
         alias="EVENTS_PROVIDER_API_KEY",
     )
 
