@@ -9,6 +9,7 @@ from app.clients.events_provider import EventsProviderClient
 from app.core.config import Settings, get_settings
 from app.core.database import get_async_session
 from app.repositories.events import EventRepository
+from app.repositories.outbox import OutboxRepository
 from app.repositories.sync_metadata import SyncMetadataRepository
 from app.repositories.tickets import TicketRepository
 
@@ -32,6 +33,12 @@ def get_ticket_repository(
     session: AsyncSession = Depends(get_db_session),
 ) -> TicketRepository:
     return TicketRepository(session)
+
+
+def get_outbox_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> OutboxRepository:
+    return OutboxRepository(session)
 
 
 def get_sync_metadata_repository(

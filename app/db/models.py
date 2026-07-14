@@ -1,9 +1,10 @@
 import enum
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -18,6 +19,15 @@ class SyncStatus(str, enum.Enum):
     success = "success"
     failed = "failed"
     running = "running"
+
+
+class OutboxStatus(str, enum.Enum):
+    pending = "pending"
+    sent = "sent"
+
+
+class OutboxEventType(str, enum.Enum):
+    ticket_purchased = "ticket_purchased"
 
 
 class Place(Base):
@@ -87,6 +97,21 @@ class Ticket(Base):
     email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
     seat: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class OutboxEvent(Base):
+    __tablename__ = "outbox"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default=OutboxStatus.pending.value,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class SyncMetadata(Base):

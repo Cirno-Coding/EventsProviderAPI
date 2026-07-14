@@ -13,9 +13,11 @@ from app.dependencies import (
     get_db_session,
     get_event_repository,
     get_events_provider_client,
+    get_outbox_repository,
     get_ticket_repository,
 )
 from app.repositories.events import EventRepository
+from app.repositories.outbox import OutboxRepository
 from app.repositories.tickets import TicketRepository
 from app.schemas.tickets import (
     CreateTicketRequest,
@@ -42,11 +44,13 @@ async def create_ticket(
     session: AsyncSession = Depends(get_db_session),
     events: EventRepository = Depends(get_event_repository),
     tickets: TicketRepository = Depends(get_ticket_repository),
+    outbox: OutboxRepository = Depends(get_outbox_repository),
     client: EventsProviderClient = Depends(get_events_provider_client),
 ) -> CreateTicketResponse:
     usecase = CreateTicketUseCase(
         events=events,
         tickets=tickets,
+        outbox=outbox,
         client=client,
     )
 

@@ -1,8 +1,9 @@
 from uuid import UUID
 
 from app.clients.events_provider import EventsProviderClient
-from app.db.models import EventStatus
+from app.db.models import EventStatus, OutboxEventType
 from app.repositories.events import EventRepository
+from app.repositories.outbox import OutboxRepository
 from app.repositories.tickets import TicketRepository
 
 
@@ -19,10 +20,12 @@ class CreateTicketUseCase:
         self,
         events: EventRepository,
         tickets: TicketRepository,
+        outbox: OutboxRepository,
         client: EventsProviderClient,
     ) -> None:
         self.events = events
         self.tickets = tickets
+        self.outbox = outbox
         self.client = client
 
     async def execute(
@@ -59,6 +62,16 @@ class CreateTicketUseCase:
             last_name=last_name,
             email=email,
             seat=seat,
+        )
+        await self.outbox.create(
+            event_type=OutboxEventType.ticket_purchased.value,
+            payload={
+                "ticket_id": str(ticket_id),
+                "event_id": str(event.id),
+                "event_name": event.name,
+                "event_time": event.event_time.isoformat(),
+                "seat": seat,
+            },
         )
 
         return ticket_id
