@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,6 +31,54 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    capashino_base_url: str | None = Field(
+        default=None,
+        alias="CAPASHINO_BASE_URL",
+    )
+    capashino_api_key: str | None = Field(
+        default=None,
+        alias="CAPASHINO_API_KEY",
+    )
+
+    outbox_poll_interval_seconds: int = Field(
+        default=10,
+        ge=1,
+        alias="OUTBOX_POLL_INTERVAL_SECONDS",
+    )
+    outbox_batch_size: int = Field(
+        default=100,
+        ge=1,
+        le=1000,
+        alias="OUTBOX_BATCH_SIZE",
+    )
+    outbox_sent_retention_days: int = Field(
+        default=7,
+        ge=1,
+        alias="OUTBOX_SENT_RETENTION_DAYS",
+    )
+
+    idempotency_key_ttl_seconds: int = Field(
+        default=86400,
+        ge=1,
+        alias="IDEMPOTENCY_KEY_TTL_SECONDS",
+    )
+
+    glitchtip_dsn: str | None = Field(
+        default=None,
+        alias="GLITCHTIP_DSN",
+    )
+
+    @field_validator(
+        "capashino_base_url",
+        "capashino_api_key",
+        "glitchtip_dsn",
+        mode="before",
+    )
+    @classmethod
+    def normalize_optional_strings(cls, value: str | None) -> str | None:
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
 
     @property
     def database_url(self) -> str:
