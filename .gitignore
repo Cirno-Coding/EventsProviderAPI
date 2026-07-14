@@ -1,5 +1,6 @@
 .venv/
 venv/
+.теория/
 __pycache__/
 *.pyc
 *.pyo
@@ -23,3 +24,7 @@ build/
 *.egg-info/
 
 .DS_Store
+
+01-assignment-requirements.md
+02-recommendations.md
+03-microservices-notes.md
