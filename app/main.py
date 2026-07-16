@@ -33,10 +33,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             sync_task = start_background_sync(settings)
 
         if settings.enable_outbox_worker:
-            if (
-                settings.capashino_base_url is None
-                or settings.capashino_api_key is None
-            ):
+            if settings.capashino_base_url is None or settings.capashino_api_key is None:
                 raise RuntimeError(
                     "CAPASHINO_BASE_URL and CAPASHINO_API_KEY are required "
                     "when ENABLE_OUTBOX_WORKER is enabled",

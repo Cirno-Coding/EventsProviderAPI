@@ -52,7 +52,7 @@ class Settings(BaseSettings):
         le=1000,
         alias="OUTBOX_BATCH_SIZE",
     )
-    
+
     outbox_sent_retention_days: int = Field(
         default=7,
         ge=1,

@@ -11,6 +11,7 @@ from app.core.database import get_async_session
 from app.repositories.events import EventRepository
 from app.repositories.outbox import OutboxRepository
 from app.repositories.sync_metadata import SyncMetadataRepository
+from app.repositories.ticket_idempotency import TicketIdempotencyRepository
 from app.repositories.tickets import TicketRepository
 
 
@@ -39,6 +40,12 @@ def get_outbox_repository(
     session: AsyncSession = Depends(get_db_session),
 ) -> OutboxRepository:
     return OutboxRepository(session)
+
+
+def get_ticket_idempotency_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> TicketIdempotencyRepository:
+    return TicketIdempotencyRepository(session)
 
 
 def get_sync_metadata_repository(

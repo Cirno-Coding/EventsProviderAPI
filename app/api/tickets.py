@@ -9,15 +9,19 @@ from app.clients.events_provider import (
     EventsProviderError,
     EventsProviderNotFoundError,
 )
+from app.core.config import Settings
 from app.dependencies import (
+    get_app_settings,
     get_db_session,
     get_event_repository,
     get_events_provider_client,
     get_outbox_repository,
+    get_ticket_idempotency_repository,
     get_ticket_repository,
 )
 from app.repositories.events import EventRepository
 from app.repositories.outbox import OutboxRepository
+from app.repositories.ticket_idempotency import TicketIdempotencyRepository
 from app.repositories.tickets import TicketRepository
 from app.schemas.tickets import (
     CreateTicketRequest,
@@ -28,6 +32,7 @@ from app.usecases.create_ticket import (
     CreateTicketUseCase,
     EventNotFound,
     EventUnexpectedStatus,
+    IdempotencyConflict,
 )
 from app.usecases.delete_ticket import DeleteTicketUseCase, TicketNotFound
 
@@ -38,6 +43,11 @@ router = APIRouter(prefix="/api/tickets", tags=["tickets"])
     "",
     response_model=CreateTicketResponse,
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_409_CONFLICT: {
+            "description": "Idempotency key was already used with different request data",
+        },
+    },
 )
 async def create_ticket(
     data: CreateTicketRequest,
@@ -45,12 +55,15 @@ async def create_ticket(
     events: EventRepository = Depends(get_event_repository),
     tickets: TicketRepository = Depends(get_ticket_repository),
     outbox: OutboxRepository = Depends(get_outbox_repository),
+    idempotency: TicketIdempotencyRepository = Depends(get_ticket_idempotency_repository),
     client: EventsProviderClient = Depends(get_events_provider_client),
+    settings: Settings = Depends(get_app_settings),
 ) -> CreateTicketResponse:
     usecase = CreateTicketUseCase(
         events=events,
         tickets=tickets,
         outbox=outbox,
+        idempotency=idempotency,
         client=client,
     )
 
@@ -61,6 +74,8 @@ async def create_ticket(
             last_name=data.last_name,
             email=str(data.email),
             seat=data.seat,
+            idempotency_key=data.idempotency_key,
+            idempotency_ttl_seconds=settings.idempotency_key_ttl_seconds,
         )
         await session.commit()
     except EventNotFound:
@@ -74,6 +89,12 @@ async def create_ticket(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Event is not published",
+        ) from None
+    except IdempotencyConflict:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Idempotency key was already used with different request data",
         ) from None
     except EventsProviderBadRequestError as exc:
         await session.rollback()
