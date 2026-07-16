@@ -48,6 +48,5 @@ class CapashinoClient:
             return
 
         raise CapashinoError(
-            "Capashino returned "
-            f"{response.status_code}: {response.text}",
+            "Capashino returned " f"{response.status_code}: {response.text}",
         )
