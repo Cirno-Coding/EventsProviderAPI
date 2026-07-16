@@ -45,6 +45,7 @@ class Settings(BaseSettings):
         ge=1,
         alias="OUTBOX_POLL_INTERVAL_SECONDS",
     )
+    
     outbox_batch_size: int = Field(
         default=100,
         ge=1,
@@ -66,6 +67,11 @@ class Settings(BaseSettings):
     glitchtip_dsn: str | None = Field(
         default=None,
         alias="GLITCHTIP_DSN",
+    )
+
+    enable_outbox_worker: bool = Field(
+        default=False,
+        alias="ENABLE_OUTBOX_WORKER",
     )
 
     @field_validator(
