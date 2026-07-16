@@ -1,9 +1,11 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 from app.api.events import router as events_router
 from app.api.health import router as health_router
@@ -19,6 +21,20 @@ from app.outbox.worker import (
     stop_background_outbox,
 )
 from app.sync.worker import start_background_sync, stop_background_sync
+
+
+def configure_glitchtip() -> None:
+    settings = get_settings()
+
+    if settings.glitchtip_dsn is None:
+        return
+
+    sentry_sdk.init(
+        dsn=settings.glitchtip_dsn,
+        environment=settings.app_env,
+        send_default_pii=False,
+        integrations=[FastApiIntegration()],
+    )
 
 
 @asynccontextmanager
@@ -65,6 +81,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    configure_glitchtip()
 
     app = FastAPI(
         title=settings.app_name,
