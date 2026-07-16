@@ -45,13 +45,14 @@ class Settings(BaseSettings):
         ge=1,
         alias="OUTBOX_POLL_INTERVAL_SECONDS",
     )
-    
+
     outbox_batch_size: int = Field(
         default=100,
         ge=1,
         le=1000,
         alias="OUTBOX_BATCH_SIZE",
     )
+    
     outbox_sent_retention_days: int = Field(
         default=7,
         ge=1,
